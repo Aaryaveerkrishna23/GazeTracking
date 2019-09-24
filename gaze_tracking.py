@@ -4,14 +4,20 @@ import cv2
 import dlib
 from eye import Eye
 from calibration import Calibration
+import pandas as pd
+from dataset import data
 
+path = r'.\test2.PNG'
+image = cv2.imread(path)
 
+datalist = data()
 class GazeTracking(object):
-    """
+    """9
     This class tracks the user's gaze.
     It provides useful information like the position of the eyes
     and pupils and allows to know if the eyes are open or closed
     """
+
 
     def __init__(self):
         self.frame = None
@@ -118,16 +124,36 @@ class GazeTracking(object):
             return blinking_ratio > 3.8
 
     def annotated_frame(self):
+
         """Returns the main frame with pupils highlighted"""
         frame = self.frame.copy()
 
         if self.pupils_located:
             color = (0, 255, 0)
+
+            #print(df.head())
+            # while True:
+            #     if cv2.waitKey(1) == 27:
+            #         break
+            #     else:
+            # print("BYYYYYY")
+            # while True:
+            #     print("HIIIIIIIIIIIIIII")
             x_left, y_left = self.pupil_left_coords()
+            datalist.xleftlist.append(x_left) #appending the data in list
+            datalist.yleftlist.append(y_left) #appending the data in list
             x_right, y_right = self.pupil_right_coords()
-            cv2.line(frame, (x_left - 5, y_left), (x_left + 5, y_left), color)
-            cv2.line(frame, (x_left, y_left - 5), (x_left, y_left + 5), color)
-            cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
-            cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
+            datalist.xrightlist.append(x_right) #appending the data in list
+            datalist.yrightlist.append(y_right) #appending the data in list
+            datalist.avg_x.append((x_left+y_left)/2)
+            datalist.avg_y.append((x_right + y_right) / 2)
+            df = pd.DataFrame({'xleft':datalist.xleftlist, 'yleft':datalist.yleftlist, 'xright':datalist.xrightlist, 'yright':datalist.yrightlist, 'average_x':datalist.avg_x, 'average_y':datalist.avg_y}) #creating a new Dataframe
+            writer = pd.ExcelWriter('data.xlsx', engine='xlsxwriter')
+            df.to_excel(writer,sheet_name='Sheet 1') #writing the dataframe in excel
+            writer.save()
+            cv2.line(image, (x_left - 5, y_left), (x_left + 5, y_left), color)
+            cv2.line(image, (x_left, y_left - 5), (x_left, y_left + 5), color)
+            cv2.line(image, (x_right - 5, y_right), (x_right + 5, y_right), color)
+            cv2.line(image, (x_right, y_right - 5), (x_right, y_right + 5), color)
 
         return frame
