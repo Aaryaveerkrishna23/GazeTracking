@@ -5,10 +5,13 @@ import dlib
 from eye import Eye
 from calibration import Calibration
 import pandas as pd
+import pyautogui
 from dataset import data
+import csv
+pyautogui.FailSafeException= False
 
-path = r'.\test2.PNG'
-image = cv2.imread(path)
+# path = r'.\test2.PNG'
+# image = cv2.imread(path)
 
 datalist = data()
 class GazeTracking(object):
@@ -124,8 +127,8 @@ class GazeTracking(object):
             return blinking_ratio > 3.8
 
     def annotated_frame(self):
-
-        """Returns the main frame with pupils highlighted"""
+       # global df
+        #"""Returns the main frame with pupils highlighted"""
         frame = self.frame.copy()
 
         if self.pupils_located:
@@ -140,6 +143,7 @@ class GazeTracking(object):
             # while True:
             #     print("HIIIIIIIIIIIIIII")
             x_left, y_left = self.pupil_left_coords()
+
             datalist.xleftlist.append(x_left) #appending the data in list
             datalist.yleftlist.append(y_left) #appending the data in list
             x_right, y_right = self.pupil_right_coords()
@@ -147,13 +151,28 @@ class GazeTracking(object):
             datalist.yrightlist.append(y_right) #appending the data in list
             datalist.avg_x.append((x_left+y_left)/2)
             datalist.avg_y.append((x_right + y_right) / 2)
-            df = pd.DataFrame({'xleft':datalist.xleftlist, 'yleft':datalist.yleftlist, 'xright':datalist.xrightlist, 'yright':datalist.yrightlist, 'average_x':datalist.avg_x, 'average_y':datalist.avg_y}) #creating a new Dataframe
-            writer = pd.ExcelWriter('data.xlsx', engine='xlsxwriter')
-            df.to_excel(writer,sheet_name='Sheet 1') #writing the dataframe in excel
-            writer.save()
-            cv2.line(image, (x_left - 5, y_left), (x_left + 5, y_left), color)
-            cv2.line(image, (x_left, y_left - 5), (x_left, y_left + 5), color)
-            cv2.line(image, (x_right - 5, y_right), (x_right + 5, y_right), color)
-            cv2.line(image, (x_right, y_right - 5), (x_right, y_right + 5), color)
+            with open('data_csv.csv', 'a',  newline = "") as csvfile:
+                csvwriter = csv.writer(csvfile)
+                csvwriter.writerow([x_left,y_left, x_right, y_right, (x_right+x_left)/2, (y_right+y_left)/2])
+            # global df
+            # df = pd.DataFrame({'xleft':datalist.xleftlist, 'yleft':datalist.yleftlist, 'xright':datalist.xrightlist, 'yright':datalist.yrightlist, 'average_x':datalist.avg_x, 'average_y':datalist.avg_y}) #creating a new Dataframe
+            # writer = pd.ExcelWriter('data.xlsx', engine='xlsxwriter')
+            # df.to_excel(writer,sheet_name='Sheet 1') #writing the dataframe in excel
+            # writer.save()
+            #df.to_csv('G:\RAIT\BE Project\GazeTracking-master\GazeTracking-master\gaze_tracking\data.csv', header=True)
+            #pyautogui.moveTo((x_left+x_right)/2, (y_left+y_right)/2)
+            cv2.line(frame, (x_left - 5, y_left), (x_left + 5, y_left), color)
+            cv2.line(frame, (x_left, y_left - 5), (x_left, y_left + 5), color)
+            cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
+            cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
+        # if cv2.waitKey(1) == 27:
+        #     df.to_csv('G:\RAIT\BE Project\GazeTracking-master\GazeTracking-master\gaze_tracking\data.csv',mode='a',header=True)
+        #     #break
 
         return frame
+    #def saveresult():
+# global df
+# df.to_csv(r'G:\RAIT\BE Project\GazeTracking-master\GazeTracking-master\gaze_tracking\data.csv', mode='a',header=False)
+#global df
+#GazeTracking.saveresult(GazeTracking.annotated_frame)
+    #df.to_csv(r'G:\RAIT\BE Project\GazeTracking-master\GazeTracking-master\gaze_tracking\data.csv', mode='a',header=False)
